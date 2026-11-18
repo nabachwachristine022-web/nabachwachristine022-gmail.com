@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --color-brand-blush: #FCE7EC;
+  --color-brand-blush-light: #FDF4F6;
+  --color-brand-cream: #FCFBF7;
+  --color-brand-ivory: #F8F6F0;
+  --color-brand-rose: #B83259;
+  --color-brand-rose-hover: #982446;
+  --color-brand-rose-dark: #7A1934;
+  --color-brand-gold: #C5A059;
+  --color-brand-gold-light: #E5C883;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-brand-cream);
+    color: #1C1917;
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4, .font-serif {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Custom scrollbar for drawer and cart */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F6F0;
+}
+::-webkit-scrollbar-thumb {
+  background: #E5D5D8;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C8B0B6;
+}

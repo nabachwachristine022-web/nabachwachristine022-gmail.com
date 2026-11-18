@@ -1,0 +1,230 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and client preferences for CFC",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique user ID matching auth.uid",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Customer display name",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 150
+        },
+        "phone": {
+          "type": "string",
+          "description": "Ugandan WhatsApp or phone number",
+          "maxLength": 30
+        },
+        "location": {
+          "type": "string",
+          "description": "Delivery city or address in Uganda (e.g., Kampala)",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Profile update timestamp"
+        }
+      },
+      "required": ["userId", "email"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order or ready-to-wear purchase inquiry",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "Unique order identifier",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the ordering customer, or 'guest'",
+          "maxLength": 128
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Name of the customer",
+          "maxLength": 100
+        },
+        "whatsappPhone": {
+          "type": "string",
+          "description": "WhatsApp contact number",
+          "maxLength": 30
+        },
+        "items": {
+          "type": "array",
+          "description": "List of ordered items with quantities and options"
+        },
+        "totalUGX": {
+          "type": "number",
+          "description": "Total estimated amount in Ugandan Shillings"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current order fulfillment state",
+          "enum": ["submitted", "reviewing", "fitting_scheduled", "in_production", "completed", "cancelled"]
+        },
+        "notes": {
+          "type": "string",
+          "description": "Special delivery or fitting notes",
+          "maxLength": 1000
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last status update timestamp"
+        }
+      },
+      "required": ["orderId", "customerName", "items", "totalUGX", "status"]
+    },
+    "CustomInquiry": {
+      "title": "CustomInquiry",
+      "description": "Bespoke custom couture design inquiry",
+      "type": "object",
+      "properties": {
+        "inquiryId": {
+          "type": "string",
+          "description": "Unique custom inquiry identifier",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of user or 'guest'",
+          "maxLength": 128
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Customer full name",
+          "maxLength": 100
+        },
+        "whatsappPhone": {
+          "type": "string",
+          "description": "WhatsApp phone number",
+          "maxLength": 30
+        },
+        "category": {
+          "type": "string",
+          "description": "Target department: women, men, or kids",
+          "enum": ["women", "men", "kids"]
+        },
+        "outfitType": {
+          "type": "string",
+          "description": "Style of outfit requested",
+          "maxLength": 120
+        },
+        "preferredColor": {
+          "type": "string",
+          "description": "Preferred color or fabric pattern",
+          "maxLength": 100
+        },
+        "measurementsOrSize": {
+          "type": "string",
+          "description": "Sizing or measurements",
+          "maxLength": 200
+        },
+        "occasion": {
+          "type": "string",
+          "description": "Event or ceremony",
+          "maxLength": 120
+        },
+        "desiredDate": {
+          "type": "string",
+          "description": "Completion target date",
+          "maxLength": 50
+        },
+        "budgetRangeUGX": {
+          "type": "string",
+          "description": "Budget expectation in UGX",
+          "maxLength": 100
+        },
+        "additionalNotes": {
+          "type": "string",
+          "description": "Detailed requests and instructions",
+          "maxLength": 1500
+        },
+        "status": {
+          "type": "string",
+          "description": "Consultation status",
+          "enum": ["submitted", "consultation_scheduled", "sketching", "fabric_sourced", "fitting", "delivered"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Submission timestamp"
+        }
+      },
+      "required": ["inquiryId", "fullName", "outfitType", "category", "status"]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "Saved favorite outfit",
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "description": "Product identifier",
+          "maxLength": 100
+        },
+        "productName": {
+          "type": "string",
+          "description": "Product title",
+          "maxLength": 150
+        },
+        "priceUGX": {
+          "type": "number",
+          "description": "Product price in UGX"
+        },
+        "image": {
+          "type": "string",
+          "description": "Image asset path",
+          "maxLength": 300
+        },
+        "category": {
+          "type": "string",
+          "description": "Product category",
+          "enum": ["women", "men", "kids"]
+        },
+        "addedAt": {
+          "type": "string",
+          "description": "Timestamp when added"
+        }
+      },
+      "required": ["productId", "productName", "priceUGX"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Stores user profiles with contact details and sizing preferences"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Stores customer cart orders and WhatsApp order records"
+    },
+    "/custom_inquiries/{inquiryId}": {
+      "schema": "CustomInquiry",
+      "description": "Stores bespoke tailor-made design inquiries"
+    },
+    "/wishlists/{userId}/items/{itemId}": {
+      "schema": "WishlistItem",
+      "description": "Stores user wishlist items"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "CFC – Christine Fashion Couture",
+  "description": "Luxury fashion boutique in Uganda offering bespoke couture and ready-to-wear collections for women, men, and children.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

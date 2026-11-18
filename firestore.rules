@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default-Deny Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'nabachwachristine022@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Entity Validators
+    function isValidUser(data) {
+      return data.keys().hasAll(['userId', 'email']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.email is string && data.email.size() <= 150 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+        (!('location' in data) || (data.location is string && data.location.size() <= 200));
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['orderId', 'customerName', 'items', 'totalUGX', 'status']) &&
+        data.orderId is string && data.orderId.size() <= 128 &&
+        data.customerName is string && data.customerName.size() <= 100 &&
+        data.items is list && data.items.size() <= 50 &&
+        data.totalUGX is number && data.totalUGX >= 0 &&
+        data.status in ['submitted', 'reviewing', 'fitting_scheduled', 'in_production', 'completed', 'cancelled'] &&
+        (!('whatsappPhone' in data) || (data.whatsappPhone is string && data.whatsappPhone.size() <= 30)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000));
+    }
+
+    function isValidCustomInquiry(data) {
+      return data.keys().hasAll(['inquiryId', 'fullName', 'outfitType', 'category', 'status']) &&
+        data.inquiryId is string && data.inquiryId.size() <= 128 &&
+        data.fullName is string && data.fullName.size() <= 100 &&
+        data.outfitType is string && data.outfitType.size() <= 120 &&
+        data.category in ['women', 'men', 'kids', 'african-wear'] &&
+        data.status in ['submitted', 'consultation_scheduled', 'sketching', 'fabric_sourced', 'fitting', 'delivered'] &&
+        (!('preferredColor' in data) || (data.preferredColor is string && data.preferredColor.size() <= 100)) &&
+        (!('measurementsOrSize' in data) || (data.measurementsOrSize is string && data.measurementsOrSize.size() <= 200)) &&
+        (!('budgetRangeUGX' in data) || (data.budgetRangeUGX is string && data.budgetRangeUGX.size() <= 100)) &&
+        (!('additionalNotes' in data) || (data.additionalNotes is string && data.additionalNotes.size() <= 1500));
+    }
+
+    function isValidDesign(data) {
+      return data.keys().hasAll(['id', 'name', 'category', 'priceUGX']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.name is string && data.name.size() <= 150 &&
+        data.category in ['women', 'men', 'kids', 'african-wear'] &&
+        data.priceUGX is number && data.priceUGX >= 0 &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+        (!('designerName' in data) || (data.designerName is string && data.designerName.size() <= 100)) &&
+        (!('image' in data) || (data.image is string && data.image.size() <= 2000000));
+    }
+
+    function isValidWishlist(data) {
+      return data.keys().hasAll(['productId', 'productName', 'priceUGX']) &&
+        data.productId is string && data.productId.size() <= 100 &&
+        data.productName is string && data.productName.size() <= 150 &&
+        data.priceUGX is number;
+    }
+
+    // Rules for Collections
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUser(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isValidId(userId) && isOwner(userId) && isValidUser(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId) && (isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(orderId) && isValidOrder(incoming()) && (
+        incoming().userId == 'guest' || (isSignedIn() && incoming().userId == request.auth.uid)
+      );
+      allow update: if isValidId(orderId) && isAdmin() && isValidOrder(incoming());
+      allow delete: if isValidId(orderId) && isAdmin();
+    }
+
+    // Custom Couture Inquiries Collection
+    match /custom_inquiries/{inquiryId} {
+      allow get: if isValidId(inquiryId) && (isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isValidId(inquiryId) && isValidCustomInquiry(incoming()) && (
+        incoming().userId == 'guest' || (isSignedIn() && incoming().userId == request.auth.uid)
+      );
+      allow update: if isValidId(inquiryId) && isAdmin() && isValidCustomInquiry(incoming());
+      allow delete: if isValidId(inquiryId) && isAdmin();
+    }
+
+    // Custom & Atelier Added Designs Collection
+    match /designs/{designId} {
+      allow get, list: if isValidId(designId);
+      allow create: if isValidId(designId) && isValidDesign(incoming());
+      allow update, delete: if isValidId(designId) && (isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid));
+    }
+
+    // Wishlist Subcollection
+    match /wishlists/{userId}/items/{itemId} {
+      allow read, write: if isValidId(userId) && isValidId(itemId) && (isOwner(userId) || isAdmin());
+    }
+
+    // Admin Reference Collection
+    match /admins/{adminId} {
+      allow read, write: if isValidId(adminId) && isAdmin();
+    }
+  }
+}
